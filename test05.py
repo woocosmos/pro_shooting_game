@@ -19,7 +19,7 @@ YELLOW = (250, 250, 50)
 RED = (250, 50, 50)
 
 FPS = 60 # 프레임 / SEC
-
+# 수정중입니다.
 # 비행기
 class Fighter(pygame.sprite.Sprite):
     def __init__(self):
