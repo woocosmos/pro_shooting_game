@@ -125,7 +125,8 @@ class Butterfly(pygame.sprite.Sprite):
 class Recommendation(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Recommendation, self).__init__()
-        recommendations = ['recommend01.png', 'recommend02.png', 'recommend03.png', 'recommend04.png']
+        recommendations = ['recommend01.png', 'recommend02.png', 'recommend03.png', 'recommend04.png', 'recommend05.png',
+                           'recommend06.png', 'recommend07.png', 'recommend08.png']
         self.image = pygame.image.load(random.choice(recommendations))
         self.rect = self.image.get_rect()  # 크기를 가져옴
         self.rect.x = xpos  # 위치값
@@ -169,6 +170,7 @@ def occur_explosion(surface, x, y): # 폭발 이미지
 
 
 def game_loop(): # 게임에서 반복되는 부분 처리
+    global final
     default_font = pygame.font.Font('DungGeunMo.ttf', 28) # 28은 크기
     background_image = pygame.image.load('background.png') # 배경
     gameover_sound = pygame.mixer.Sound('gameover.mp3') # 게임오버 사운드
@@ -198,8 +200,8 @@ def game_loop(): # 게임에서 반복되는 부분 처리
     pygame.time.set_timer(BUTTERFLY, 3000)
 
     count = 0
-
     takes = []
+    final = []
 
     done = False
     while not done: # False가 not이니 True가되어 반복이 됨. 만약 done이 True가 되면 종료
@@ -309,11 +311,14 @@ def game_loop(): # 게임에서 반복되는 부분 처리
             if eating:
                 take = recommendation.image
                 recommendation.kill()
-                take = pygame.transform.scale(take, (50, 50))
                 if len(takes) == 3:
-                    del takes[0]
+                    del takes[0], final[0]
+                    final.insert(2, take)
+                    take = pygame.transform.scale(take, (50, 50))
                     takes.insert(2, take)
                 else:
+                    final.append(take)
+                    take = pygame.transform.scale(take, (50, 50))
                     takes.append(take)
 
         try:
@@ -346,8 +351,49 @@ def game_loop(): # 게임에서 반복되는 부분 처리
             done=True # 반복문 종료
 
         fps_clock.tick(FPS)
+    return 'results'
 
-    return 'game_menu'
+def results(): # 결과창
+    global final
+    start_image = pygame.image.load('background.png')
+    screen.blit(start_image, [0, 0])  # 0, 0 딱 그 크기 위치에 맞게
+    draw_x = int(WINDOW_WIDTH / 2)
+    draw_y = int(WINDOW_HEIGHT / 8)
+    font_40 = pygame.font.Font('DungGeunMo.ttf', 40)
+    draw_text('아쉽게도 졌습니다.', font_40, screen, draw_x, draw_y, YELLOW)
+    draw_text('당신에게 추천하는', font_40, screen, draw_x, draw_y + 100, WHITE)
+    draw_text('앱은', font_40, screen, draw_x, draw_y + 150, WHITE)
+    draw_text('다시 시작하려면', font_40, screen, draw_x, draw_y + 400, WHITE)
+    draw_text('엔터를 누르세요', font_40, screen, draw_x, draw_y + 450, WHITE)
+
+    if len(final) > 0:
+        info_dict = {} # 중복되는 추천앱은 삭제하도록
+        for i, j in enumerate(final):
+            info_dict[str(j.get_view())[-7:-2]] = i # 중복되는 키는 저장되지 않음
+
+        no_dub = [num for num in info_dict.values()] # 중복 제거된 인덱스
+        final = [final[idx] for idx in no_dub] # 인덱싱
+
+        try:
+            screen.blit(final[0], [draw_x-180, draw_y+200])
+            screen.blit(final[1], [draw_x-60, draw_y+200])
+            screen.blit(final[2], [draw_x+60, draw_y+200])
+        except:
+            pass
+    else:
+        draw_text('찾지 못했습니다.', font_40, screen, draw_x, draw_y+250, WHITE)
+
+    pygame.display.update()
+
+    for event in pygame.event.get(): # pygame.event를 받아옴
+        if event.type == pygame.KEYDOWN: # 키가 눌림
+            if event.key == pygame.K_RETURN: # 키가 눌린값이 엔터(K_RETURN)일시
+                return 'game_menu'
+        if event.type == QUIT:  # 게임 종료를 누르면 게임 종료
+                return 'quit'
+
+    return 'results'
+
 
 def game_menu():
     start_image = pygame.image.load('background.png')
@@ -383,6 +429,8 @@ def main(): # 게임에 처음 들어가기전
     while action != 'quit': # action이 quit이 아니면
         if action == 'game_menu':
             action = game_menu()
+        elif action == 'results':
+            action = results()
         elif action == 'play':
             action = game_loop()
 
