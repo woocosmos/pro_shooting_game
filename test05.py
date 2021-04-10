@@ -96,11 +96,12 @@ class Rock(pygame.sprite.Sprite):
         if self.rect.y > WINDOW_HEIGHT:
             return True
 
-
+ # https://app.monopro.org/pixel/
 class Butterfly(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Butterfly, self).__init__()
-        self.butterfly_images = ['red_butterfly.png', 'blue_butterfly.png', 'green_butterfly.png']  # 다양한 돌 이미지 적용
+        self.butterfly_images = ['gift01.png', 'gift02.png']  # 다양한 돌 이미지 적용
+        self.recommendations = ['recommend01.png', 'recommend02.png', 'recommend03.png', 'recommend04.png']
         self.image = pygame.image.load(self.butterfly_images[0])  # 랜덤으로 운석이미지 호출
         self.rect = self.image.get_rect()  # 크기를 가져옴
         self.rect.x = xpos  # 위치값
@@ -116,12 +117,11 @@ class Butterfly(pygame.sprite.Sprite):
         if self.rect.y > WINDOW_HEIGHT:
             return True
 
-    def change_color_blue(self): # 색깔 바꾸기
+    def change_color(self): # 색깔 바꾸기
         self.image = pygame.image.load(self.butterfly_images[1])
 
-    def change_color_green(self):  # 색깔 바꾸기
-        self.image = pygame.image.load(self.butterfly_images[2])
-
+    def change_recommendation(self):  # 색깔 바꾸기
+        self.image = pygame.image.load(random.choice(self.recommendations))
 
 
 def draw_text(text, font, surface, x, y, main_color): # 게임 점수 or 다앙햔 것을 출력
@@ -225,15 +225,15 @@ def game_loop(): # 게임에서 반복되는 부분 처리
             butterflies.add(butterfly)
             timing = False
 
-        draw_text('파괴한 운석 : {}'.format(shot_count), default_font, screen, 100, 20, YELLOW)
-        draw_text('놓친 운석 : {}'.format(count_missed), default_font, screen, 400, 20, RED)
+        # draw_text('파괴한 운석 : {}'.format(shot_count), default_font, screen, 110, 20, YELLOW)
+        draw_text('취향 저격', default_font, screen, 75, 20, YELLOW)
+        draw_text('놓친 운석 {}개'.format(count_missed), default_font, screen, 380, 20, RED)
 
 
 
         for missile in missiles:
             rock = missile.collide(rocks) # 미사일과 운석의 충돌을 반환
             butterfly = missile.collide(butterflies)
-            butterflyXY = []
 
             if rock: # 충돌시
                 missile.kill()
@@ -243,27 +243,40 @@ def game_loop(): # 게임에서 반복되는 부분 처리
 
             if butterfly:
                 count += 1
-                butterflyXY.append([butterfly.rect.x, butterfly.rect.y])
                 if count == 1:
                     missile.kill()
-                    butterfly.change_color_blue()
-                    print('blue')
+                    butterfly.change_color()
+                    print('칼라', count)
                 elif count == 2:
                     missile.kill()
-                    butterfly.change_color_green()
-                    print('green')
-                elif count == 3:
+                    butterfly.change_recommendation()
+                    print('추천작 등장', count)
+                elif count > 2:
                     missile.kill()
-                    butterfly.kill()
-                    occur_explosion(screen, butterfly.rect.x, butterfly.rect.y)
-                    print('dead')
-                    count = 0
+                    print('더이상 안 먹힘', count)
 
 
         for rock in rocks:
             if rock.out_of_screen(): # 운석이 만약 화면을 나간다면
                 rock.kill() # 제거
                 count_missed += 1 # 놓친갯수로 카운트
+
+        # 나비를 먹었을 때
+        for butterfly in butterflies:
+            if butterfly.out_of_screen(): # 운석이 만약 화면을 나간다면
+                butterfly.kill() # 제거
+                count=0
+
+            if fighter.collide(butterflies):
+                if count >= 2:
+                    take = butterfly.image
+                    butterfly.kill()
+                    count = 0
+        try:
+            take = pygame.transform.scale(take, (50, 50))
+            screen.blit(take, [10, 40])
+        except:
+            pass
 
         # 화면이 계속바뀌니 update함
         rocks.update()
@@ -331,4 +344,3 @@ def main(): # 게임에 처음 들어가기전
 # 메인 실행
 if __name__ == "__main__":
     main()
-
