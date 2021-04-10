@@ -19,7 +19,7 @@ YELLOW = (250, 250, 50)
 RED = (250, 50, 50)
 
 FPS = 60 # 프레임 / SEC
-# 수정중입니다.
+
 # 비행기
 class Fighter(pygame.sprite.Sprite):
     def __init__(self):
@@ -124,6 +124,34 @@ class Butterfly(pygame.sprite.Sprite):
         self.image = pygame.image.load(random.choice(self.recommendations))
 
 
+class Recommendation(pygame.sprite.Sprite):
+    def __init__(self, xpos, ypos, speed):
+        super(Recommendation, self).__init__()
+        recommendations = ['recommend01.png', 'recommend02.png', 'recommend03.png', 'recommend04.png']
+        self.image = pygame.image.load(random.choice(recommendations))
+        self.rect = self.image.get_rect()  # 크기를 가져옴
+        self.rect.x = xpos  # 위치값
+        self.rect.y = ypos  # 위치값
+        self.speed = speed
+
+    def update(self):  # 화면에 업데이트
+        # y값만 증가시키면됨 위에서 아래로 내려오기 때문
+        self.rect.y += self.speed
+
+    def pause(self):
+        pass
+
+    def out_of_screen(self):  # 화면에 나간것을 체크
+        if self.rect.y > WINDOW_HEIGHT:
+            return True
+
+    def collide(self, sprite):  # 충돌 관리
+        if pygame.sprite.collide_rect(self, sprite):
+            return sprite
+
+
+
+
 def draw_text(text, font, surface, x, y, main_color): # 게임 점수 or 다앙햔 것을 출력
     text_obj = font.render(text, True, main_color) # render로 font를 정의
     text_rect = text_obj.get_rect() #위치를 가져옴
@@ -156,6 +184,8 @@ def game_loop(): # 게임에서 반복되는 부분 처리
     missiles = pygame.sprite.Group() # 미사일은 여러개가 들어갈 수 있기 때문에 그룹을 사용
     rocks = pygame.sprite.Group() # 운석은 여러개가 들어갈 수 있기 때문에 그룹을 사용
     butterflies = pygame.sprite.Group()
+    recommendations = pygame.sprite.Group()
+
 
     occur_prob = 40
     shot_count = 0 # 맞춘 운석 갯수
@@ -170,6 +200,8 @@ def game_loop(): # 게임에서 반복되는 부분 처리
     pygame.time.set_timer(BUTTERFLY, 3000)
 
     count = 0
+
+    takes = []
 
     done = False
     while not done: # False가 not이니 True가되어 반복이 됨. 만약 done이 True가 되면 종료
@@ -234,6 +266,7 @@ def game_loop(): # 게임에서 반복되는 부분 처리
         for missile in missiles:
             rock = missile.collide(rocks) # 미사일과 운석의 충돌을 반환
             butterfly = missile.collide(butterflies)
+            recommendation = missile.collide(recommendations)
 
             if rock: # 충돌시
                 missile.kill()
@@ -246,14 +279,16 @@ def game_loop(): # 게임에서 반복되는 부분 처리
                 if count == 1:
                     missile.kill()
                     butterfly.change_color()
-                    print('칼라', count)
                 elif count == 2:
                     missile.kill()
-                    butterfly.change_recommendation()
-                    print('추천작 등장', count)
-                elif count > 2:
-                    missile.kill()
-                    print('더이상 안 먹힘', count)
+                    butterfly.kill()
+                    recommendation = Recommendation(butterfly.rect.x, butterfly.rect.y, speed)  # 운석이 화면박으로 안나가도록
+                    recommendations.add(recommendation)
+                    count = 0
+
+            if recommendation:
+                missile.kill()
+
 
 
         for rock in rocks:
@@ -261,20 +296,32 @@ def game_loop(): # 게임에서 반복되는 부분 처리
                 rock.kill() # 제거
                 count_missed += 1 # 놓친갯수로 카운트
 
-        # 나비를 먹었을 때
-        for butterfly in butterflies:
-            if butterfly.out_of_screen(): # 운석이 만약 화면을 나간다면
-                butterfly.kill() # 제거
-                count=0
 
-            if fighter.collide(butterflies):
-                if count >= 2:
-                    take = butterfly.image
-                    butterfly.kill()
-                    count = 0
+        for butterfly in butterflies:
+            if butterfly.out_of_screen(): # 나비가 화면을 나간다면
+                butterfly.kill() # 제거
+
+
+        for recommendation in recommendations:
+            eating = recommendation.collide(fighter)
+
+            if recommendation.out_of_screen():
+                recommendation.kill()
+
+            if eating:
+                take = recommendation.image
+                recommendation.kill()
+                take = pygame.transform.scale(take, (50, 50))
+                if len(takes) == 3:
+                    del takes[0]
+                    takes.insert(2, take)
+                else:
+                    takes.append(take)
+
         try:
-            take = pygame.transform.scale(take, (50, 50))
-            screen.blit(take, [10, 40])
+            screen.blit(takes[0], [10, 40])
+            screen.blit(takes[1], [60, 40])
+            screen.blit(takes[2], [110, 40])
         except:
             pass
 
@@ -283,6 +330,8 @@ def game_loop(): # 게임에서 반복되는 부분 처리
         rocks.draw(screen)
         butterflies.update()
         butterflies.draw(screen)
+        recommendations.update()
+        recommendations.draw(screen)
         missiles.update()
         missiles.draw(screen)
         fighter.update()
@@ -307,10 +356,10 @@ def game_menu():
     screen.blit(start_image, [0, 0]) # 0, 0 딱 그 크기 위치에 맞게
     draw_x = int(WINDOW_WIDTH / 2)
     draw_y = int(WINDOW_HEIGHT / 4)
-    font_70 = pygame.font.Font('DungGeunMo.ttf', 70)
+    font_60 = pygame.font.Font('DungGeunMo.ttf', 60)
     font_40 = pygame.font.Font('DungGeunMo.ttf', 40)
 
-    draw_text('지구를 지켜라!', font_70, screen, draw_x, draw_y, YELLOW)
+    draw_text('지구를 지켜라!', font_60, screen, draw_x, draw_y, YELLOW)
     draw_text('엔터 키를 누르면', font_40, screen, draw_x, draw_y + 200, WHITE)
     draw_text('게임이 시작됩니다.', font_40, screen, draw_x, draw_y + 250, WHITE)
 
@@ -330,7 +379,7 @@ def main(): # 게임에 처음 들어가기전
 
     pygame.init() # pygame.init 초창기에 초기화
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) # 실제 윈도우의 크기
-    pygame.display.set_caption('PyShooting') # 윈도우에 띄울 이름
+    pygame.display.set_caption('WYS 취향저격 게임') # 윈도우에 띄울 이름
 
     action = 'game_menu'
     while action != 'quit': # action이 quit이 아니면
