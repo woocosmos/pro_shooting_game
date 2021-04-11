@@ -4,6 +4,7 @@
 import random
 from time import sleep
 import sys
+import numpy as np
 
 import pygame
 from pygame.locals import *
@@ -18,18 +19,17 @@ WHITE = (255, 255, 255)
 YELLOW = (250, 250, 50)
 RED = (250, 50, 50)
 
-FPS = 60 # 프레임 / SEC
+# 프레임 / SEC
+FPS = 60
 
 # 비행기
 class Fighter(pygame.sprite.Sprite):
     def __init__(self):
         super(Fighter, self).__init__()
-        # 이미지
         self.image = pygame.image.load('fighter.png')
         self.rect = self.image.get_rect() # 크기
         self.rect.x = int(WINDOW_WIDTH / 2) # 처음 위치 (화면의 가운데, 반)
         self.rect.y = WINDOW_HEIGHT - self.rect.height # (우주선의 높이만큼 뺌)
-        # 움직임 정의
         self.dx = 0
         self.dy = 0
 
@@ -96,7 +96,8 @@ class Rock(pygame.sprite.Sprite):
         if self.rect.y > WINDOW_HEIGHT:
             return True
 
- # https://app.monopro.org/pixel/
+ # https://app.monopro.org/pixel/ 픽셀아트 -> 110*110 (3cm*3cm)
+ # 선물 박스
 class Butterfly(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Butterfly, self).__init__()
@@ -121,7 +122,7 @@ class Butterfly(pygame.sprite.Sprite):
         self.image = pygame.image.load(self.butterfly_images[1])
         self.sound.play()
 
-
+ # 추천
 class Recommendation(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Recommendation, self).__init__()
@@ -135,19 +136,16 @@ class Recommendation(pygame.sprite.Sprite):
         pygame.mixer.Sound('change2.wav').play()
 
     def update(self):  # 화면에 업데이트
-        # y값만 증가시키면됨 위에서 아래로 내려오기 때문
         self.rect.y += self.speed
 
     def out_of_screen(self):  # 화면에 나간것을 체크
         if self.rect.y > WINDOW_HEIGHT:
             return True
 
-    def collide(self, sprite):  # 충돌 관리
+    def collide(self, sprite):  # 충돌 관리 = 아이템 먹기
         if pygame.sprite.collide_rect(self, sprite):
             pygame.mixer.Sound('get.wav').play()
             return sprite
-
-
 
 
 def draw_text(text, font, surface, x, y, main_color): # 게임 점수 or 다앙햔 것을 출력
@@ -202,6 +200,7 @@ def game_loop(): # 게임에서 반복되는 부분 처리
     count = 0
     takes = []
     final = []
+    test = []
 
     done = False
     while not done: # False가 not이니 True가되어 반복이 됨. 만약 done이 True가 되면 종료
@@ -258,7 +257,7 @@ def game_loop(): # 게임에서 반복되는 부분 처리
             timing = False
 
         # draw_text('파괴한 운석 : {}'.format(shot_count), default_font, screen, 110, 20, YELLOW)
-        draw_text('취향 저격', default_font, screen, 75, 20, YELLOW)
+        draw_text('나의 콜렉션', default_font, screen, 80, 20, YELLOW)
         draw_text('놓친 운석 {}개'.format(count_missed), default_font, screen, 380, 20, RED)
 
 
@@ -311,12 +310,16 @@ def game_loop(): # 게임에서 반복되는 부분 처리
             if eating:
                 take = recommendation.image
                 recommendation.kill()
-                if len(takes) == 3:
+
+                james = np.concatenate(pygame.surfarray.array2d(take)).sum() # 현재 픽셀 정보
+                infos = [np.concatenate(pygame.surfarray.array2d(j)).sum() for j in final] # 지금까지의 픽셀 정보
+
+                if (len(takes) == 3) and (james not in infos):
                     del takes[0], final[0]
                     final.insert(2, take)
                     take = pygame.transform.scale(take, (50, 50))
                     takes.insert(2, take)
-                else:
+                elif (len(takes) < 3) and (james not in infos):
                     final.append(take)
                     take = pygame.transform.scale(take, (50, 50))
                     takes.append(take)
@@ -367,12 +370,12 @@ def results(): # 결과창
     draw_text('엔터를 누르세요', font_40, screen, draw_x, draw_y + 450, WHITE)
 
     if len(final) > 0:
-        info_dict = {} # 중복되는 추천앱은 삭제하도록
-        for i, j in enumerate(final):
-            info_dict[str(j.get_view())[-7:-2]] = i # 중복되는 키는 저장되지 않음
+        # info_dict = {} # 중복되는 추천앱은 삭제하도록
+        # for i, j in enumerate(final):
+        #     info_dict[str(j.get_view())[-7:-2]] = i # 중복되는 키는 저장되지 않음
 
-        no_dub = [num for num in info_dict.values()] # 중복 제거된 인덱스
-        final = [final[idx] for idx in no_dub] # 인덱싱
+        # no_dub = [num for num in info_dict.values()] # 중복 제거된 인덱스
+        # final = [final[idx] for idx in no_dub] # 인덱싱
 
         try:
             screen.blit(final[0], [draw_x-180, draw_y+200])
@@ -403,7 +406,7 @@ def game_menu():
     font_60 = pygame.font.Font('DungGeunMo.ttf', 60)
     font_40 = pygame.font.Font('DungGeunMo.ttf', 40)
 
-    draw_text('지구를 지켜라!', font_60, screen, draw_x, draw_y, YELLOW)
+    draw_text('취향 저격 게임', font_60, screen, draw_x, draw_y, YELLOW)
     draw_text('엔터 키를 누르면', font_40, screen, draw_x, draw_y + 200, WHITE)
     draw_text('게임이 시작됩니다.', font_40, screen, draw_x, draw_y + 250, WHITE)
 
@@ -423,7 +426,7 @@ def main(): # 게임에 처음 들어가기전
 
     pygame.init() # pygame.init 초창기에 초기화
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) # 실제 윈도우의 크기
-    pygame.display.set_caption('WYS 취향저격 게임') # 윈도우에 띄울 이름
+    pygame.display.set_caption('취향저격 게임 by Bernice') # 윈도우에 띄울 이름
 
     action = 'game_menu'
     while action != 'quit': # action이 quit이 아니면
