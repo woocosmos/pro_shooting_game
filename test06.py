@@ -32,6 +32,8 @@ class Fighter(pygame.sprite.Sprite):
         self.rect.y = WINDOW_HEIGHT - self.rect.height # (우주선의 높이만큼 뺌)
         self.dx = 0
         self.dy = 0
+        self.shoot_delay = 50  # 연사 속도
+        self.last_shot = pygame.time.get_ticks()
 
     def update(self): # 비행기 움직임 처리
         self.rect.x += self.dx
@@ -47,11 +49,14 @@ class Fighter(pygame.sprite.Sprite):
     def draw(self, screen): # 그려주는 부분
         screen.blit(self.image, self.rect) # rect=현재 위치
 
-    def collide(self, sprites): # 충돌, sprites=객체 관리
+    def collide(self, sprites):
         for sprite in sprites:
-            # 충돌검사, self:우주선, sprite와 비교하여 충돌이 났으면 리턴, 충돌난 애를 return
             if pygame.sprite.collide_rect(self, sprite):
                 return sprite
+
+    def bomb(self):
+        return Bomb(self)
+
 
 # 미사일
 class Missile(pygame.sprite.Sprite):
@@ -63,8 +68,13 @@ class Missile(pygame.sprite.Sprite):
         self.rect.y = ypos
         self.speed = speed
         self.sound = pygame.mixer.Sound('missile.wav') # 미사일 사운드
+        self.shoot_delay = 50  # 연사 속도
+        self.last_shot = pygame.time.get_ticks()
 
     def launch(self): # 발사
+        now = pygame.time.get_ticks()
+        if now - self.last_shot > self.shoot_delay:
+            self.last_launchshot = now
         self.sound.play()
 
     def update(self): # 미사일이 화면에 반영될 때 정의
@@ -76,6 +86,33 @@ class Missile(pygame.sprite.Sprite):
         for sprite in sprites:
             if pygame.sprite.collide_rect(self, sprite):
                 return sprite # 충돌 반환
+
+class Bomb(pygame.sprite.Sprite):
+    def __init__(self, fighter):
+        super().__init__()
+        self.image = None
+        screen = pygame.display.get_surface()
+        self.area = screen.get_rect()
+        self.radius = 20
+        self.radiusIncrement = 4
+        self.rect = fighter.rect
+        self.sound = pygame.mixer.Sound('bomb.ogg')
+    def update(self):
+        self.sound.play()
+        self.radius += self.radiusIncrement
+        pygame.draw.circle(
+            pygame.display.get_surface(),
+            pygame.Color(0, 0, 255, 128),
+            self.rect.center, self.radius, 3)
+        if (self.rect.center[1] - self.radius <= self.area.top
+            and self.rect.center[1] + self.radius >= self.area.bottom
+            and self.rect.center[0] - self.radius <= self.area.left
+                and self.rect.center[0] + self.radius >= self.area.right):
+            self.kill()
+    def collide(self, sprites): # 충돌 관리
+        for sprite in sprites:
+            if pygame.sprite.collide_rect(self, sprite):
+                return self # 충돌 반환
 
 # 운석
 class Rock(pygame.sprite.Sprite):
@@ -183,7 +220,8 @@ def game_loop(): # 게임에서 반복되는 부분 처리
     rocks = pygame.sprite.Group() # 운석은 여러개가 들어갈 수 있기 때문에 그룹을 사용
     butterflies = pygame.sprite.Group()
     recommendations = pygame.sprite.Group()
-
+    bombs = pygame.sprite.Group()
+    alldrawings = pygame.sprite.Group()
 
     occur_prob = 40
     shot_count = 0 # 맞춘 운석 갯수
@@ -222,6 +260,9 @@ def game_loop(): # 게임에서 반복되는 부분 처리
                     missile = Missile(fighter.rect.centerx, fighter.rect.y, 10) # 미사일 생성, 우주선 정가운데 위치, 속도 10
                     missile.launch() # 발사 사운드 재생
                     missiles.add(missile)
+                elif event.key == pygame.K_b:
+                    newBomb = fighter.bomb()
+                    newBomb.add(bombs, alldrawings)
 
             if event.type == pygame.KEYUP: # 키에서 손을 뗄때
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
@@ -260,7 +301,14 @@ def game_loop(): # 게임에서 반복되는 부분 처리
         draw_text('나의 콜렉션', default_font, screen, 80, 20, YELLOW)
         draw_text('놓친 운석 {}개'.format(count_missed), default_font, screen, 380, 20, RED)
 
-
+        for bomb in bombs:
+            try:
+                if pygame.sprite.collide_circle(bomb, rock):
+                    rock.kill()
+                    occur_explosion(screen, rock.rect.x, rock.rect.y)
+                    shot_count += 1
+            except:
+                pass
 
         for missile in missiles:
             rock = missile.collide(rocks) # 미사일과 운석의 충돌을 반환
@@ -342,6 +390,7 @@ def game_loop(): # 게임에서 반복되는 부분 처리
         missiles.draw(screen)
         fighter.update()
         fighter.draw(screen)
+        alldrawings.update()
         pygame.display.flip() # pygame display에 flip으로 지금 현재 업데이트 된 값을 전체 반영
 
         # 게임이 끝나는 조건
