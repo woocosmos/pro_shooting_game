@@ -18,6 +18,7 @@
 - ESC키로 일시정지합니다
 
 ## 참고사항
+- exe 파일 다운로드 받기: https://drive.google.com/file/d/1TqaGYVNgxY1KpkYkVe7CIZukC8AEwC2y/view?usp=sharing
 
 ver 1.1  2021.04.14  
 made by 우연수, 박강인, 진용빈
