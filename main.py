@@ -218,6 +218,41 @@ def occur_explosion(surface, x, y):
     explosion_sound = pygame.mixer.Sound('./sources/explosion.wav')
     explosion_sound.play()
 
+# 정지
+def pause():
+    image = pygame.Surface([WINDOW_WIDTH, WINDOW_HEIGHT])
+    image.fill(BLACK)
+    image.set_alpha(100)
+
+    screen.blit(image, (0, 0))
+
+    x = WINDOW_WIDTH / 2
+    y = WINDOW_HEIGHT // 2
+    font_30 = pygame.font.Font('./sources/DungGeunMo.ttf', 30)
+
+    draw_text('플레이 ENTER', font_30, screen, x, y-50, WHITE)
+    draw_text('메인화면 Q', font_30,screen,  x, y, WHITE)
+    draw_text('종료 ESC', font_30,screen,  x, y+50, WHITE)
+    pygame.mixer.music.set_volume(0.1)
+
+    pygame.display.update()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    pygame.mixer.music.set_volume(1)
+                    return True
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    exit()
+                elif event.key == pygame.K_RETURN:
+                    pygame.mixer.music.set_volume(1)
+                    return False
+
 
 # 게임에서 반복되는 부분 처리
 def game_loop():
@@ -271,13 +306,13 @@ def game_loop():
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    fighter.dx -= 5
+                    fighter.dx -= 6
                 elif event.key == pygame.K_RIGHT:
-                    fighter.dx += 5
+                    fighter.dx += 6
                 elif event.key == pygame.K_UP:
-                    fighter.dy -= 5
+                    fighter.dy -= 6
                 elif event.key == pygame.K_DOWN:
-                    fighter.dy += 5
+                    fighter.dy += 6
                 elif event.key == pygame.K_SPACE:
                     missile = Missile(fighter.rect.centerx, fighter.rect.y, 10)
                     missile.launch()
@@ -287,6 +322,14 @@ def game_loop():
                         newBomb = fighter.bomb()
                         newBomb.add(bombs, alldrawings)
                         bomb_held -= 1
+                elif event.key == pygame.K_ESCAPE:
+                    # 게임 재개하면 저절로 움직이기에 추가
+                    fighter.dx = 0
+                    fighter.dy = 0
+                    if pause():
+                        pygame.display.update()
+                        pygame.mixer.music.stop()
+                        return 'game_menu'
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
@@ -488,8 +531,8 @@ def results(): # 결과창
     draw_text('GAME OVER', font_70, screen, draw_x, draw_y, WHITE)
     draw_text('당신의 취향을', font_40, screen, draw_x, draw_y + 100, WHITE)
     draw_text('저격하는 앱은', font_40, screen, draw_x, draw_y + 150, WHITE)
-    draw_text('다시 시작하려면', font_40, screen, draw_x, draw_y + 400, BLACK)
-    draw_text('엔터 키를 누르세요', font_40, screen, draw_x, draw_y + 450, BLACK)
+    draw_text('엔터 키를 누르면', font_40, screen, draw_x, draw_y + 400, BLACK)
+    draw_text('메인으로 돌아갑니다', font_40, screen, draw_x, draw_y + 450, BLACK)
 
     if len(final) > 0:
         try:
@@ -521,7 +564,10 @@ def game_menu():
     font_60 = pygame.font.Font('./sources/DungGeunMo.ttf', 60)
     font_40 = pygame.font.Font('./sources/DungGeunMo.ttf', 40)
     font_20 = pygame.font.Font('./sources/DungGeunMo.ttf', 20)
+    font_15 = pygame.font.Font('./sources/DungGeunMo.ttf', 15)
 
+
+    draw_text('ver 1.1', font_15, screen, WINDOW_WIDTH-30, WINDOW_HEIGHT-10, WHITE)
 
     draw_text('정보의 바다 속에서', font_40, screen, draw_x, draw_y-60, YELLOW)
     draw_text('당신의 취향은', font_60, screen, draw_x, draw_y, YELLOW)
@@ -530,7 +576,6 @@ def game_menu():
     draw_text('엔터 키를 눌러', font_40, screen, draw_x, draw_y + 200, (0, 0, 0))
     draw_text('취향을 찾아보세요!', font_40, screen, draw_x, draw_y + 250, (0, 0, 0))
     draw_text('made by 강인, 용빈, 연수', font_20, screen, draw_x, draw_y + 300, (0, 0, 0))
-
 
     pygame.display.update()
 
@@ -546,7 +591,7 @@ def game_menu():
 def main(): # 게임에 처음 들어가기전
     global screen # 게임 전체에서 screen을 사용
 
-    pygame.init() # pygame.init 초창기에 초기화
+    pygame.init() # 초기화
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) # 실제 윈도우의 크기
     pygame.display.set_caption('취향저격 게임 by Bernice') # 윈도우에 띄울 이름
 
