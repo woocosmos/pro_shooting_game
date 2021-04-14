@@ -5,14 +5,21 @@ import random
 from time import sleep
 import sys
 import numpy as np
+from os import path
+
 
 import pygame
 from pygame.locals import *
+
+# 절대경로
+file_dir = path.join(path.dirname(__file__))+'/sources'
+print(file_dir)
 
 # 전체 윈도우 크기
 WINDOW_WIDTH = 480
 WINDOW_HEIGHT = 640
 
+# 색깔
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 YELLOW = (250, 100, 50)
@@ -25,7 +32,7 @@ FPS = 60
 class Fighter(pygame.sprite.Sprite):
     def __init__(self):
         super(Fighter, self).__init__()
-        self.image = pygame.image.load('./sources/fighter.png')
+        self.image = pygame.image.load(path.join(file_dir, 'fighter.png'))
         self.rect = self.image.get_rect()
         self.rect.x = int(WINDOW_WIDTH / 2)
         self.rect.y = WINDOW_HEIGHT - self.rect.height
@@ -58,12 +65,12 @@ class Fighter(pygame.sprite.Sprite):
 class Missile(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Missile, self).__init__()
-        self.image = pygame.image.load('./sources/missile.png')
+        self.image = pygame.image.load(path.join(file_dir, 'missile.png'))
         self.rect = self.image.get_rect()
         self.rect.x = xpos
         self.rect.y = ypos
         self.speed = speed
-        self.sound = pygame.mixer.Sound('./sources/missile.wav')
+        self.sound = pygame.mixer.Sound(path.join(file_dir, 'missile.wav'))
         self.shoot_delay = 50
         self.last_shot = pygame.time.get_ticks()
 
@@ -83,6 +90,7 @@ class Missile(pygame.sprite.Sprite):
             if pygame.sprite.collide_rect(self, sprite):
                 return sprite
 
+# 필살기
 class Bomb(pygame.sprite.Sprite):
     def __init__(self, fighter):
         super().__init__()
@@ -107,15 +115,16 @@ class Bomb(pygame.sprite.Sprite):
                 and self.rect.center[0] + self.radius >= self.area.right):
             self.kill()
 
-    def collide(self, sprites): # 충돌 관리
+    def collide(self, sprites):
         for sprite in sprites:
             if pygame.sprite.collide_rect(self, sprite):
-                return self # 충돌 반환
+                return sprite
 
+# 필살기 아이템
 class Bomb_item(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Bomb_item, self).__init__()
-        self.image = pygame.image.load('./sources/bomb.png')
+        self.image = pygame.image.load(path.join(file_dir, 'bomb.png'))
         self.rect = self.image.get_rect()
         self.rect.x = xpos
         self.rect.y = ypos
@@ -130,7 +139,7 @@ class Bomb_item(pygame.sprite.Sprite):
 
     def collide(self, sprite):
         if pygame.sprite.collide_rect(self, sprite):
-            pygame.mixer.Sound('./sources/get.wav').play()
+            pygame.mixer.Sound(path.join(file_dir, 'get.wav')).play()
             return sprite
 
 # 운석
@@ -138,7 +147,7 @@ class Rock(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Rock, self).__init__()
         rock_images = ('rock01.png', 'rock02.png', 'rock09.png', 'rock10.png')
-        self.image = pygame.image.load('./sources/'+ random.choice(rock_images))
+        self.image = pygame.image.load((path.join(file_dir, random.choice(rock_images))))
         self.rect = self.image.get_rect()
         self.rect.x = xpos
         self.rect.y = ypos
@@ -151,17 +160,16 @@ class Rock(pygame.sprite.Sprite):
         if self.rect.y > WINDOW_HEIGHT:
             return True
 
- # https://app.monopro.org/pixel/ 픽셀아트 -> 110*110 (3cm*3cm)
  # 선물 박스
 class Butterfly(pygame.sprite.Sprite):
     def __init__(self, xpos, ypos, speed):
         super(Butterfly, self).__init__()
-        self.image = pygame.image.load('./sources/gift01.png')
+        self.image = pygame.image.load(path.join(file_dir, 'gift01.png'))
         self.rect = self.image.get_rect()
         self.rect.x = xpos
         self.rect.y = ypos
         self.speed = speed
-        self.sound = pygame.mixer.Sound('./sources/change1.wav')
+        self.sound = pygame.mixer.Sound(path.join(file_dir, 'change1.wav'))
 
     def update(self):
         self.rect.y += self.speed
@@ -171,7 +179,7 @@ class Butterfly(pygame.sprite.Sprite):
             return True
 
     def change_color(self):
-        self.image = pygame.image.load('./sources/gift02.png')
+        self.image = pygame.image.load(path.join(file_dir, 'gift02.png'))
         self.sound.play()
 
  # 추천앱
@@ -180,12 +188,12 @@ class Recommendation(pygame.sprite.Sprite):
         super(Recommendation, self).__init__()
         recommendations = ['recommend01.png', 'recommend02.png', 'recommend03.png', 'recommend04.png', 'recommend05.png',
                            'recommend06.png', 'recommend07.png', 'recommend08.png', 'recommend09.png', 'recommend10.png']
-        self.image = pygame.image.load('./sources/'+random.choice(recommendations))
+        self.image = pygame.image.load(path.join(file_dir, random.choice((recommendations))))
         self.rect = self.image.get_rect()
         self.rect.x = xpos
         self.rect.y = ypos
         self.speed = speed
-        pygame.mixer.Sound('./sources/change2.wav').play()
+        pygame.mixer.Sound(path.join(file_dir, 'change2.wav')).play()
 
     def update(self):
         self.rect.y += self.speed
@@ -194,12 +202,12 @@ class Recommendation(pygame.sprite.Sprite):
         if self.rect.y > WINDOW_HEIGHT:
             return True
 
-    def collide(self, sprite):  # 충돌 관리 = 아이템 먹기
+    def collide(self, sprite):
         if pygame.sprite.collide_rect(self, sprite):
-            pygame.mixer.Sound('./sources/get.wav').play()
+            pygame.mixer.Sound(path.join(file_dir, 'get.wav')).play()
             return sprite
 
-
+# 텍스트 띄우기
 def draw_text(text, font, surface, x, y, main_color):
     text_obj = font.render(text, True, main_color)
     text_rect = text_obj.get_rect()
@@ -207,15 +215,15 @@ def draw_text(text, font, surface, x, y, main_color):
     text_rect.centery = y
     surface.blit(text_obj, text_rect)
 
-# 폭발 이미지
+# 폭발 이미지&소리
 def occur_explosion(surface, x, y):
-    explosion_image = pygame.image.load('./sources/explosion.png')
+    explosion_image = pygame.image.load(path.join(file_dir, 'explosion.png'))
     explosion_rect = explosion_image.get_rect()
     explosion_rect.x = x
     explosion_rect.y = y
     surface.blit(explosion_image, explosion_rect)
 
-    explosion_sound = pygame.mixer.Sound('./sources/explosion.wav')
+    explosion_sound = pygame.mixer.Sound(path.join(file_dir, 'explosion.wav'))
     explosion_sound.play()
 
 # 정지
@@ -228,11 +236,13 @@ def pause():
 
     x = WINDOW_WIDTH / 2
     y = WINDOW_HEIGHT // 2
-    font_30 = pygame.font.Font('./sources/DungGeunMo.ttf', 30)
+    font_40 = pygame.font.Font(path.join(file_dir, 'DungGeunMo.ttf'), 40)
+    font_70 = pygame.font.Font(path.join(file_dir, 'DungGeunMo.ttf'), 70)
 
-    draw_text('플레이 ENTER', font_30, screen, x, y-50, WHITE)
-    draw_text('메인화면 Q', font_30,screen,  x, y, WHITE)
-    draw_text('종료 ESC', font_30,screen,  x, y+50, WHITE)
+
+    draw_text('PAUSE', font_70, screen,  x, y-100, RED)
+    draw_text('게임 재개 ESC', font_40,screen,  x, y, WHITE)
+    draw_text('메인으로 돌아가기 Q', font_40,screen,  x, y+50, WHITE)
     pygame.mixer.music.set_volume(0.1)
 
     pygame.display.update()
@@ -246,25 +256,22 @@ def pause():
                 if event.key == pygame.K_q:
                     pygame.mixer.music.set_volume(1)
                     return True
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    exit()
-                elif event.key == pygame.K_RETURN:
+                elif event.key == pygame.K_ESCAPE:
                     pygame.mixer.music.set_volume(1)
                     return False
 
 
 # 게임에서 반복되는 부분 처리
 def game_loop():
-    global final
-    default_font = pygame.font.Font('./sources/DungGeunMo.ttf', 28)
-    background_image = pygame.image.load('./sources/background1.png') # 배경
-    gameover_sound = pygame.mixer.Sound('./sources/gameover.mp3') # 게임오버 사운드
-    pygame.mixer.music.load('./sources/music.wav') # 게임음악
-    pygame.mixer.music.play(-1) # 무한 반복
+    global final, score
+    default_font = pygame.font.Font(path.join(file_dir, 'DungGeunMo.ttf'), 28)
+    background_image = pygame.image.load(path.join(file_dir, 'background1.png'))
+    gameover_sound = pygame.mixer.Sound(path.join(file_dir, 'gameover.mp3'))
+    pygame.mixer.music.load(path.join(file_dir, 'music.wav'))
+    pygame.mixer.music.play(-1)
     fps_clock = pygame.time.Clock()
-    change_sound = pygame.mixer.Sound('./sources/change2.wav')
-    get_sound = pygame.mixer.Sound('./sources/get.wav')
+    change_sound = pygame.mixer.Sound(path.join(file_dir, 'change2.wav'))
+    get_sound = pygame.mixer.Sound(path.join(file_dir, 'get.wav'))
 
     fighter = Fighter()
     missiles = pygame.sprite.Group()
@@ -276,13 +283,14 @@ def game_loop():
     alldrawings = pygame.sprite.Group()
 
     occur_prob = 60
-    shot_count = 0 # 맞춘 운석 갯수
-    count_missed = 0 # 놓친 운석 갯수
+    shot_count = 0
+    count_missed = 0
 
     occur_prob2 = 600
     shot_count2 = 0
     count_missed2 = 0
 
+    score = 0
     bomb_held = 3
 
     timing = False
@@ -326,10 +334,12 @@ def game_loop():
                     # 게임 재개하면 저절로 움직이기에 추가
                     fighter.dx = 0
                     fighter.dy = 0
+
                     if pause():
                         pygame.display.update()
                         pygame.mixer.music.stop()
                         return 'game_menu'
+
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
@@ -362,19 +372,19 @@ def game_loop():
         max_butterfly_speed = 1 + int(shot_count2 / 100)
 
         if timing:
-            speed = random.randint(min_butterfly_speed, max_butterfly_speed)  # 속도는 랜덤
-            butterfly = Butterfly(random.randint(0, WINDOW_WIDTH - 30), 0, speed)  # 최초 객체 생성 = 빨간색
+            speed = random.randint(min_butterfly_speed, max_butterfly_speed)
+            butterfly = Butterfly(random.randint(0, WINDOW_WIDTH - 30), 0, speed)
             butterflies.add(butterfly)
             timing = False
 
-        # 폭탄 등장
+        # 폭탄 아이템 등장
         if bomb_timing:
-            speed = random.randint(min_butterfly_speed, max_butterfly_speed) # 일단 속도는 나비와 같게
+            speed = random.randint(min_butterfly_speed, max_butterfly_speed)
             item = Bomb_item(random.randint(0, WINDOW_WIDTH - 30), 0, speed)
             items.add(item)
             bomb_timing = False
 
-        draw_text('놓친 쓰레기 {}개'.format(count_missed), default_font, screen, 360, 20, YELLOW)
+        draw_text('MY SCORE {}'.format(score), default_font, screen, 380, 20, WHITE)
         draw_text('나의 취향', default_font, screen, 80, 20, WHITE)
 
         # 필살기 충돌
@@ -395,8 +405,9 @@ def game_loop():
             if rock: # 충돌시
                 missile.kill()
                 rock.kill()
-                occur_explosion(screen, rock.rect.x, rock.rect.y) # 돌에 위치값에 터지는것을 스크린에 출력
+                occur_explosion(screen, rock.rect.x, rock.rect.y)
                 shot_count += 1 # 파괴시 샷카운트
+                score += 100
 
             if butterfly:
                 count += 1
@@ -406,7 +417,7 @@ def game_loop():
                 elif count == 2:
                     missile.kill()
                     butterfly.kill()
-                    recommendation = Recommendation(butterfly.rect.x, butterfly.rect.y, speed)  # 운석이 화면 밖으로 안나가도록
+                    recommendation = Recommendation(butterfly.rect.x, butterfly.rect.y, speed)
                     recommendations.add(recommendation)
                     count = 0
 
@@ -415,14 +426,14 @@ def game_loop():
 
         # 운석 관리
         for rock in rocks:
-            if rock.out_of_screen(): # 운석이 만약 화면을 나간다면
-                rock.kill() # 제거
-                count_missed += 1 # 놓친갯수로 카운트
+            if rock.out_of_screen():
+                rock.kill()
+                count_missed += 1
 
         # 나비 관리
         for butterfly in butterflies:
-            if butterfly.out_of_screen(): # 나비가 화면을 나간다면
-                butterfly.kill() # 제거
+            if butterfly.out_of_screen():
+                butterfly.kill()
 
         # 폭탄 관리
         for item in items:
@@ -437,7 +448,7 @@ def game_loop():
                 bomb_held = min(bomb_held, 5)
 
         # 폭탄 적립
-        temp = pygame.image.load('./sources/bomb.png')
+        temp = pygame.image.load(path.join(file_dir, 'bomb.png'))
 
         if bomb_held == 5:
             screen.blit(temp, [280, 40])
@@ -471,6 +482,8 @@ def game_loop():
             if eating:
                 take = recommendation.image
                 recommendation.kill()
+                score += 300
+                shot_count2 += 1
 
                 james = np.concatenate(pygame.surfarray.array2d(take)).sum() # 현재 픽셀 정보
                 infos = [np.concatenate(pygame.surfarray.array2d(j)).sum() for j in final] # 지금까지의 픽셀 정보
@@ -492,6 +505,7 @@ def game_loop():
         except:
             pass
 
+
         # 화면이 계속바뀌니 update함
         rocks.update()
         rocks.draw(screen)
@@ -506,12 +520,12 @@ def game_loop():
         fighter.update()
         fighter.draw(screen)
         alldrawings.update()
-        pygame.display.flip() # pygame display에 flip으로 지금 현재 업데이트 된 값을 전체 반영
+        pygame.display.flip()
 
         # 게임이 끝나는 조건
-        if fighter.collide(rocks): #or count_missed >= 3: # 운석과 충돌 혹은 3개이상 놓쳤을 때
-            pygame.mixer_music.stop() # 배경음악 끄기
-            occur_explosion(screen, fighter.rect.x, fighter.rect.y) # 비행기 위치 폭발
+        if fighter.collide(rocks) or count_missed >= 5: # 운석과 충돌 혹은 5개이상 놓쳤을 때
+            pygame.mixer_music.stop()
+            occur_explosion(screen, fighter.rect.x, fighter.rect.y)
             pygame.display.update()
             gameover_sound.play()
             sleep(1)
@@ -520,19 +534,29 @@ def game_loop():
         fps_clock.tick(FPS)
     return 'results'
 
-def results(): # 결과창
-    global final
-    start_image = pygame.image.load('./sources/background1.png')
-    screen.blit(start_image, [0, 0])  # 0, 0 딱 그 크기 위치에 맞게
+ # 결과창
+def results():
+    global final, score
+    start_image = pygame.image.load(path.join(file_dir, 'background1.png'))
+    screen.blit(start_image, [0, 0])
+
+    image = pygame.Surface([WINDOW_WIDTH, WINDOW_HEIGHT])
+    image.fill(BLACK)
+    image.set_alpha(60)
+    screen.blit(image, (0, 0))
+
     draw_x = int(WINDOW_WIDTH / 2)
     draw_y = int(WINDOW_HEIGHT / 8)
-    font_70 = pygame.font.Font('./sources/DungGeunMo.ttf', 70)
-    font_40 = pygame.font.Font('./sources/DungGeunMo.ttf', 40)
-    draw_text('GAME OVER', font_70, screen, draw_x, draw_y, WHITE)
-    draw_text('당신의 취향을', font_40, screen, draw_x, draw_y + 100, WHITE)
-    draw_text('저격하는 앱은', font_40, screen, draw_x, draw_y + 150, WHITE)
-    draw_text('엔터 키를 누르면', font_40, screen, draw_x, draw_y + 400, BLACK)
-    draw_text('메인으로 돌아갑니다', font_40, screen, draw_x, draw_y + 450, BLACK)
+    font_70 = pygame.font.Font(path.join(file_dir, 'DungGeunMo.ttf'), 70)
+    font_40 = pygame.font.Font(path.join(file_dir, 'DungGeunMo.ttf'), 40)
+    font_30 = pygame.font.Font(path.join(file_dir, 'DungGeunMo.ttf'), 30)
+
+    draw_text('GAME OVER!', font_70, screen, draw_x, draw_y, WHITE)
+    draw_text('SCORE : {}'.format(score), font_30, screen, draw_x, draw_y +60, WHITE)
+    draw_text('당신에게 추천하는 앱', font_40, screen, draw_x, draw_y + 150, WHITE)
+    # draw_text('저격하는 앱은', font_40, screen, draw_x, draw_y + 170, WHITE)
+    draw_text('엔터 키를 누르면', font_30, screen, draw_x, draw_y + 400, WHITE)
+    draw_text('메인으로 돌아갑니다', font_30, screen, draw_x, draw_y + 430, WHITE)
 
     if len(final) > 0:
         try:
@@ -546,28 +570,30 @@ def results(): # 결과창
 
     pygame.display.update()
 
-    for event in pygame.event.get(): # pygame.event를 받아옴
-        if event.type == pygame.KEYDOWN: # 키가 눌림
-            if event.key == pygame.K_RETURN: # 키가 눌린값이 엔터(K_RETURN)일시
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
                 return 'game_menu'
-        if event.type == QUIT:  # 게임 종료를 누르면 게임 종료
+        if event.type == QUIT:
                 return 'quit'
 
     return 'results'
 
 
 def game_menu():
-    start_image = pygame.image.load('./sources/background1.png')
-    screen.blit(start_image, [0, 0]) # 0, 0 딱 그 크기 위치에 맞게
+    start_image = pygame.image.load(path.join(file_dir, 'background1.png'))
+    screen.blit(start_image, [0, 0])
     draw_x = int(WINDOW_WIDTH / 2)
     draw_y = int(WINDOW_HEIGHT / 4)
-    font_60 = pygame.font.Font('./sources/DungGeunMo.ttf', 60)
-    font_40 = pygame.font.Font('./sources/DungGeunMo.ttf', 40)
-    font_20 = pygame.font.Font('./sources/DungGeunMo.ttf', 20)
-    font_15 = pygame.font.Font('./sources/DungGeunMo.ttf', 15)
+    font_60 = pygame.font.Font(path.join(file_dir, 'DungGeunMo.ttf'), 60)
+    font_40 = pygame.font.Font(path.join(file_dir, 'DungGeunMo.ttf'), 40)
+    font_20 = pygame.font.Font(path.join(file_dir, 'DungGeunMo.ttf'), 20)
+    font_15 = pygame.font.Font(path.join(file_dir, 'DungGeunMo.ttf'), 15)
 
 
     draw_text('ver 1.1', font_15, screen, WINDOW_WIDTH-30, WINDOW_HEIGHT-10, WHITE)
+    draw_text('github.com/woocosmos', font_15, screen, WINDOW_WIDTH-400, WINDOW_HEIGHT-10, WHITE)
+
 
     draw_text('정보의 바다 속에서', font_40, screen, draw_x, draw_y-60, YELLOW)
     draw_text('당신의 취향은', font_60, screen, draw_x, draw_y, YELLOW)
@@ -575,28 +601,28 @@ def game_menu():
 
     draw_text('엔터 키를 눌러', font_40, screen, draw_x, draw_y + 200, (0, 0, 0))
     draw_text('취향을 찾아보세요!', font_40, screen, draw_x, draw_y + 250, (0, 0, 0))
-    draw_text('made by 강인, 용빈, 연수', font_20, screen, draw_x, draw_y + 300, (0, 0, 0))
+    draw_text('made by Bernice', font_20, screen, draw_x, draw_y + 300, (0, 0, 0))
 
     pygame.display.update()
 
-    for event in pygame.event.get(): # pygame.event를 받아옴
-        if event.type == pygame.KEYDOWN: # 키가 눌림
-            if event.key == pygame.K_RETURN: # 키가 눌린값이 엔터(K_RETURN)일시
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
                 return 'play'
-        if event.type == QUIT: # 게임 종료를 누르면 게임 종료
+        if event.type == QUIT:
             return 'quit'
 
     return 'game_menu'
 
-def main(): # 게임에 처음 들어가기전
-    global screen # 게임 전체에서 screen을 사용
+def main():
+    global screen
 
-    pygame.init() # 초기화
-    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT)) # 실제 윈도우의 크기
-    pygame.display.set_caption('취향저격 게임 by Bernice') # 윈도우에 띄울 이름
+    pygame.init()
+    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    pygame.display.set_caption('취향저격 게임 by Bernice')
 
     action = 'game_menu'
-    while action != 'quit': # action이 quit이 아니면
+    while action != 'quit':
         if action == 'game_menu':
             action = game_menu()
         elif action == 'results':
@@ -604,8 +630,8 @@ def main(): # 게임에 처음 들어가기전
         elif action == 'play':
             action = game_loop()
 
-    pygame.quit() # pygame을 끝냄
+    pygame.quit()
 
-# 메인 실행
+
 if __name__ == "__main__":
     main()
