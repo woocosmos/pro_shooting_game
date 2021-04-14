@@ -1,5 +1,5 @@
 # 취향 저격 게임
-![image](https://user-images.githubusercontent.com/65290436/114710392-a0828500-9d68-11eb-8c5f-1b3a5ac1faee.png)
+![test](https://user-images.githubusercontent.com/65290436/114710707-0242ef00-9d69-11eb-8aa2-4c463c9e3485.gif)
 
 ## 소개
 쓰레기가 넘쳐나는 정보의 바다  
