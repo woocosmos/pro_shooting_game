@@ -1,5 +1,5 @@
 # 취향 저격 게임
-![image](https://user-images.githubusercontent.com/65290436/114415384-976ba980-9bea-11eb-9d25-5cf6a6b01c12.png)
+![image](https://user-images.githubusercontent.com/65290436/114710392-a0828500-9d68-11eb-8c5f-1b3a5ac1faee.png)
 
 ## 소개
 쓰레기가 넘쳐나는 정보의 바다  
@@ -15,9 +15,9 @@
 - 상하좌우 키로 이동합니다
 - 스페이스바로 미사일을 사용합니다
 - b키로 궁극기를 사용합니다
+- ESC키로 일시정지합니다
 
 ## 참고사항
-- sources 폴더까지 모두 다운 받으셔야 실행됩니다
 
-ver 1.0  2021.04.12  
+ver 1.1  2021.04.14  
 made by 우연수, 박강인, 진용빈
